@@ -294,4 +294,51 @@ class UsersInfoController extends BaseController
         }
     }
 
+    /**
+     * 下载导入模板
+     * @return Response
+     */
+    public function downloadTemplate() : Response
+    {
+        $file_name = "科技人员.xls";
+        return downloadFile($file_name);
+    }
+
+    /**
+     * @Apidoc\Title("导入数据")
+     * @Apidoc\Url("/gx/UsersInfo/import")
+     * @Apidoc\Method("POST")
+     * @param Request $request
+     * @return Response
+     */
+    public function import(Request $request) : Response
+    {
+        $file = current($request->file());
+        if (!$file || !$file->isValid()) {
+            return $this->fail('未找到上传文件');
+        }
+        $this->logic->import($file);
+        return $this->success('导入成功');
+    }
+
+    /**
+     * @Apidoc\Title("导出数据")
+     * @Apidoc\Url("/gx/UsersInfo/export")
+     * @Apidoc\Method("POST")
+     * @param Request $request
+     * @return Response
+     */
+    public function export(Request $request) : Response
+    {
+        $where = $request->more([
+            ['name', ''],
+            ['sex', ''],
+            ['tel', ''],
+            ['born_date', ''],
+        ]);
+        return $this->logic->export($where);
+    }
+
+
+
 }

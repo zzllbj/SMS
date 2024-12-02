@@ -38,6 +38,8 @@ Route::group('/core', function () {
     fastRoute('post',\plugin\saiadmin\app\controller\system\SystemPostController::class);
     Route::get("/post/accessPost",[\plugin\saiadmin\app\controller\system\SystemPostController::class, 'accessPost']);
     Route::post("/post/downloadTemplate",[plugin\saiadmin\app\controller\system\SystemPostController::class, 'downloadTemplate']);
+    Route::post("/gx/UsersInfo/downloadTemplate",[app\gx\controller\UsersInfoController::class, 'downloadTemplate']);
+    Route::post("/gx/ProjectsInfo/downloadTemplate",[app\gx\controller\ProjectsInfoController::class, 'downloadTemplate']);
 
     fastRoute('menu',\plugin\saiadmin\app\controller\system\SystemMenuController::class);
     fastRoute('dictType',\plugin\saiadmin\app\controller\system\SystemDictTypeController::class);

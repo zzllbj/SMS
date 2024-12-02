@@ -6,8 +6,10 @@
 // +----------------------------------------------------------------------
 namespace app\gx\logic;
 
+use OpenSpout\Reader\XLSX\Reader;
 use plugin\saiadmin\basic\BaseLogic;
 use plugin\saiadmin\exception\ApiException;
+use plugin\saiadmin\service\OpenSpoutWriter;
 use plugin\saiadmin\utils\Helper;
 use app\gx\model\UsersInfo;
 
@@ -29,29 +31,68 @@ class UsersInfoLogic extends BaseLogic
      */
     public function computerage($userlistdata): array
     {
-        // 用于计算年龄的方法
-        //var_dump($userlistdata);
         if (is_array($userlistdata) && isset($userlistdata['data'])) {
             foreach ($userlistdata['data'] as &$userInfo) {
-                // 获取出生日期
                 $bornDate = $userInfo['born_date'] ?? null;
-                //var_dump($bornDate);
-                //echo $bornDate;
                 if ($bornDate) {
-                    // 将出生日期字符串转换为日期对象
                     $birthDate = new \DateTime($bornDate);
-                    // 获取当前日期对象
                     $currentDate = new \DateTime('now');
-                    // 计算年龄
                     $age = $currentDate->diff($birthDate)->y;
-                    // 更新人员信息数据中的年龄字段
-                    //var_dump($age);
                     $userInfo['age'] = $age;
                 }
             }
         }
-        // 返回更新后的人员信息数据列表
         return $userlistdata;
+    }
+
+    /**
+     * 导入数据
+     */
+    public function import($file)
+    {
+        $path = $this->getImport($file);
+        $reader = new Reader();
+        try {
+            $reader->open($path);
+            $data = [];
+            foreach ($reader->getSheetIterator() as $sheet) {
+                $isHeader = true;
+                foreach ($sheet->getRowIterator() as $row) {
+                    if ($isHeader) {
+                        $isHeader = false;
+                        continue;
+                    }
+                    $cells = $row->getCells();
+                    $data[] = [
+                        'name' => $cells[0]->getValue(),
+                        'sex' => $cells[1]->getValue(),
+                        'tel' => $cells[2]->getValue(),
+                        'born_date' => $cells[3]->getValue(),
+                    ];
+                }
+            }
+            $this->saveAll($data);
+        } catch (\Exception $e) {
+            throw new ApiException('导入文件错误，请上传正确的文件格式xlsx');
+        }
+    }
+
+    /**
+     * 导出数据
+     */
+    public function export($where = [])
+    {
+        $query = $this->search($where)->field('name,sex,tel,born_date');
+        $data = $this->getAll($query);
+        $file_name = '科技人员.xlsx';
+        $header = ['姓名', '性别', '电话', '出生日期'];
+        $filter = [];
+        $writer = new OpenSpoutWriter($file_name);
+        $writer->setWidth([15, 15, 20, 15, 15, 25]);
+        $writer->setHeader($header);
+        $writer->setData($data, null, $filter);
+        $file_path = $writer->returnFile();
+        return response()->download($file_path, urlencode($file_name));
     }
 
 
