@@ -95,7 +95,7 @@ class BaseController
         $logic  = new SystemUserLogic();
         $result = getCurrentInfo();
         if (! $result) {
-            throw new ApiException('未授权，请先登录', 401);
+            throw new ApiException('认证失败，请先登录', 401);
         }
         $this->adminId   = $result['id'];
         $this->adminName = $result['username'];
@@ -172,7 +172,7 @@ class BaseController
     {
         $m = strtolower(request()->method());
         if ($m !== strtolower($method)) {
-            throw new ApiException('Not Found!', 404);
+            throw new ApiException('请检查请求方法', 405);
         }
     }
 

@@ -22,7 +22,7 @@ return [
             'driver'      => 'mysql',
             'host'        => '127.0.0.1',
             'port'        => 3306,
-            'database'    => 'gx_saiadmin',
+            'database'    => 'webman_admin',
             'username'    => 'root',
             'password'    => 'cf797',
             'unix_socket' => '',

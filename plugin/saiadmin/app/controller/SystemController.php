@@ -6,21 +6,21 @@
 // +----------------------------------------------------------------------
 namespace plugin\saiadmin\app\controller;
 
+use app\gx\logic\ProjectsInfoLogic;
+use plugin\saiadmin\app\logic\system\SystemDictDataLogic;
 use plugin\saiadmin\app\logic\system\SystemDictTypeLogic;
 use plugin\saiadmin\app\logic\system\SystemLoginLogLogic;
+use plugin\saiadmin\app\logic\system\SystemMenuLogic;
 use plugin\saiadmin\app\logic\system\SystemOperLogLogic;
 use plugin\saiadmin\app\logic\system\SystemRoleLogic;
-use plugin\saiadmin\basic\BaseController;
-use plugin\saiadmin\app\logic\system\SystemMenuLogic;
-use plugin\saiadmin\app\logic\system\SystemUserLogic;
-use plugin\saiadmin\app\logic\system\SystemDictDataLogic;
 use plugin\saiadmin\app\logic\system\SystemUploadfileLogic;
+use plugin\saiadmin\app\logic\system\SystemUserLogic;
+use plugin\saiadmin\basic\BaseController;
+use plugin\saiadmin\utils\Arr;
+use plugin\saiadmin\utils\Cache;
 use plugin\saiadmin\utils\ServerMonitor;
-use plugin\saiadmin\exception\ApiException;
 use support\Request;
 use support\Response;
-use plugin\saiadmin\utils\Cache;
-use plugin\saiadmin\utils\Arr;
 use Tinywan\Storage\Storage;
 
 /**
@@ -34,19 +34,19 @@ class SystemController extends BaseController
      */
     public function userInfo(): Response
     {
-        $logic = new SystemMenuLogic();
-        $roleLogic = new SystemRoleLogic();
+        $logic        = new SystemMenuLogic();
+        $roleLogic    = new SystemRoleLogic();
         $info['user'] = $this->adminInfo;
         if ($this->adminInfo['id'] === 1) {
-            $info['codes'] = ['*'];
-            $info['roles'] = ['superAdmin'];
+            $info['codes']   = ['*'];
+            $info['roles']   = ['superAdmin'];
             $info['routers'] = $logic->getAllMenus();
         } else {
-            $role_ids = Arr::getArrayColumn($this->adminInfo['roleList'], 'id');
-            $roles = $roleLogic->getMenuIdsByRoleIds($role_ids);
-            $ids = $logic->filterMenuIds($roles);
-            $info['codes'] = $logic->getMenuCode($ids);
-            $info['roles'] = Arr::getArrayColumn($this->adminInfo['roleList'],'code');
+            $role_ids        = Arr::getArrayColumn($this->adminInfo['roleList'], 'id');
+            $roles           = $roleLogic->getMenuIdsByRoleIds($role_ids);
+            $ids             = $logic->filterMenuIds($roles);
+            $info['codes']   = $logic->getMenuCode($ids);
+            $info['roles']   = Arr::getArrayColumn($this->adminInfo['roleList'], 'code');
             $info['routers'] = $logic->getRoutersByIds($ids);
         }
         return $this->success($info);
@@ -61,7 +61,7 @@ class SystemController extends BaseController
         $query = $logic->where('status', 1)
             ->field('id, name, code, remark')
             ->with(['dicts' => function ($query) {
-                $query->where('status', 1)->withoutField(['created_by','updated_by','create_time','update_time'])->order('sort desc');
+                $query->where('status', 1)->withoutField(['created_by', 'updated_by', 'create_time', 'update_time'])->order('sort desc');
             }]);
         $data = $logic->getAll($query);
         $dict = $this->packageDict($data, 'code');
@@ -74,7 +74,7 @@ class SystemController extends BaseController
         foreach ($array as $item) {
             if (isset($item[$field])) {
                 if (isset($result[$item[$field]])) {
-                    $result[$item[$field]] = [($result[$item[$field]])];
+                    $result[$item[$field]]   = [($result[$item[$field]])];
                     $result[$item[$field]][] = $item['dicts'];
                 } else {
                     $result[$item[$field]] = $item['dicts'];
@@ -96,7 +96,7 @@ class SystemController extends BaseController
         }
         $logic = new SystemDictDataLogic();
         $query = $logic->where('status', 1)->where('code', $code)->field('id, label, value')->order('sort desc');
-        $data = $logic->getAll($query);
+        $data  = $logic->getAll($query);
         Cache::set($code, $data);
         return $this->success($data);
     }
@@ -115,7 +115,7 @@ class SystemController extends BaseController
             ['mime_type', ''],
         ]);
         $query = $logic->search($where);
-        $data = $logic->getList($query);
+        $data  = $logic->getList($query);
         return $this->success($data);
     }
 
@@ -138,8 +138,8 @@ class SystemController extends BaseController
         ]);
         $query = $logic->search($where);
         $query->auth([
-            'id' => $this->adminId,
-            'dept' => $this->adminInfo['deptList']
+            'id'   => $this->adminId,
+            'dept' => $this->adminInfo['deptList'],
         ]);
         $data = $logic->getList($query);
         return $this->success($data);
@@ -152,10 +152,26 @@ class SystemController extends BaseController
      */
     public function getUserInfoByIds(Request $request): Response
     {
-        $ids = $request->input('ids');
+        $ids   = $request->input('ids');
         $logic = new SystemUserLogic();
-        $data = $logic->where('id', 'in', $ids)
+        $data  = $logic->where('id', 'in', $ids)
             ->field('id, username, nickname, phone, email, create_time')
+            ->select()
+            ->toArray();
+        return $this->success($data);
+    }
+
+    /**
+     * 根据id获取项目信息
+     * @param Request $request
+     * @return Response
+     */
+    public function getProjectsInfoByIds(Request $request): Response
+    {
+        $ids   = $request->input('ids');
+        $logic = new ProjectsInfoLogic();
+        $data  = $logic->where('id', 'in', $ids)
+            ->field('id, name')
             ->select()
             ->toArray();
         return $this->success($data);
@@ -166,10 +182,10 @@ class SystemController extends BaseController
      */
     public function saveNetworkImage(Request $request): Response
     {
-        $url = $request->input('url', '');
+        $url    = $request->input('url', '');
         $config = Storage::getConfig('local');
-        $logic = new SystemUploadfileLogic();
-        $data = $logic->saveNetworkImage($url, $config);
+        $logic  = new SystemUploadfileLogic();
+        $data   = $logic->saveNetworkImage($url, $config);
         return $this->success($data, '操作成功');
     }
 
@@ -179,7 +195,7 @@ class SystemController extends BaseController
     public function uploadImage(Request $request): Response
     {
         $logic = new SystemUploadfileLogic();
-        $type = $request->input('mode', 'system');
+        $type  = $request->input('mode', 'system');
         if ($type == 'local') {
             return $this->success($logic->uploadBase('image', true));
         }
@@ -192,7 +208,7 @@ class SystemController extends BaseController
     public function uploadFile(Request $request): Response
     {
         $logic = new SystemUploadfileLogic();
-        $type = $request->input('mode', 'system');
+        $type  = $request->input('mode', 'system');
         if ($type == 'local') {
             return $this->success($logic->uploadBase('file', true));
         }
@@ -206,8 +222,8 @@ class SystemController extends BaseController
      */
     public function downloadById($id): Response
     {
-        $logic = new SystemUploadfileLogic();
-        $model = $logic->find($id);
+        $logic       = new SystemUploadfileLogic();
+        $model       = $logic->find($id);
         $object_name = $model->object_name;
         return response()->download($model->storage_path, $object_name);
     }
@@ -219,8 +235,8 @@ class SystemController extends BaseController
      */
     public function downloadByHash($hash): Response
     {
-        $logic = new SystemUploadfileLogic();
-        $model = $logic->where('hash', $hash)->find();
+        $logic       = new SystemUploadfileLogic();
+        $model       = $logic->where('hash', $hash)->find();
         $object_name = $model->object_name;
         return response()->download($model->storage_path, $object_name);
     }
@@ -259,11 +275,11 @@ class SystemController extends BaseController
      * 获取登录日志
      * @return Response
      */
-    public function getLoginLogList() : Response
+    public function getLoginLogList(): Response
     {
         $logic = new SystemLoginLogLogic();
         $query = $logic->search(['username' => $this->adminName]);
-        $data = $logic->getList($query);
+        $data  = $logic->getList($query);
         return $this->success($data);
     }
 
@@ -271,11 +287,11 @@ class SystemController extends BaseController
      * 获取操作日志
      * @return Response
      */
-    public function getOperationLogList() : Response
+    public function getOperationLogList(): Response
     {
         $logic = new SystemOperLogLogic();
         $query = $logic->search(['username' => $this->adminName])->hidden(['request_data', 'delete_time']);
-        $data = $logic->getList($query);
+        $data  = $logic->getList($query);
         return $this->success($data);
     }
 
@@ -283,21 +299,21 @@ class SystemController extends BaseController
      * 获取服务器信息
      * @return Response
      */
-    public function getServerInfo() : Response
+    public function getServerInfo(): Response
     {
         $service = new ServerMonitor();
         return $this->success([
-            'cpu' => $service->getCpuInfo(),
+            'cpu'    => $service->getCpuInfo(),
             'memory' => $service->getMemInfo(),
             'phpenv' => $service->getPhpAndEnvInfo(),
         ]);
     }
-	
-	/**
+
+    /**
      * 清除缓存
      * @return Response
      */
-    public function clearAllCache() : Response
+    public function clearAllCache(): Response
     {
         return $this->success([], '清除缓存成功!');
     }

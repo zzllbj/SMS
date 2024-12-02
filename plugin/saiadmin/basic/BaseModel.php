@@ -8,6 +8,7 @@ namespace plugin\saiadmin\basic;
 
 use think\Model;
 use think\model\concern\SoftDelete;
+//use support\Model;
 
 /**
  * 模型基类
@@ -26,6 +27,8 @@ class BaseModel extends Model
     protected $hidden = ['delete_time'];
     // 只读字段
     protected $readonly = ['created_by', 'create_time'];
+    // 自动维护时间戳
+    //public $timestamps = true;
 
     /**
      * 时间范围搜索

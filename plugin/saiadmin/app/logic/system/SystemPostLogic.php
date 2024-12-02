@@ -11,6 +11,7 @@ use plugin\saiadmin\basic\BaseLogic;
 use plugin\saiadmin\exception\ApiException;
 use plugin\saiadmin\service\OpenSpoutWriter;
 use OpenSpout\Reader\XLSX\Reader;
+use support\Response;
 
 /**
  * 岗位管理逻辑层
@@ -39,12 +40,13 @@ class SystemPostLogic extends BaseLogic
     /**
      * 导入数据
      */
-    public function import($file)
+    public function import($file):string
     {
         $path = $this->getImport($file);
         $reader = new Reader();
         try {
             $reader->open($path);
+            var_dump('文件路径：'.$path);
             $data = [];
             foreach ($reader->getSheetIterator() as $sheet) {
                 $isHeader = true;
@@ -55,23 +57,27 @@ class SystemPostLogic extends BaseLogic
                     }
                     $cells = $row->getCells();
                     $data[] = [
-                        'name' => $cells[0]->getValue(),
-                        'code' => $cells[1]->getValue(),
-                        'sort' => $cells[2]->getValue(),
-                        'status' => $cells[3]->getValue(),
+                        'name' => $cells[1]->getValue(),
+                        'code' => $cells[2]->getValue(),
+                        'sort' => $cells[3]->getValue(),
+                        'status' => $cells[4]->getValue(),
                     ];
+                    var_dump($data);
+
                 }
             }
             $this->saveAll($data);
+            return json(['code' => 200, 'msg' => '成功','data'=>'1']);
         } catch (\Exception $e) {
-            throw new ApiException('导入文件错误，请上传正确的文件格式xlsx');
+            throw new ApiException('导入文件错误，请上传正确的文件格式xlsx'.$e);
         }
+
     }
 
     /**
      * 导出数据
      */
-    public function export($where = [])
+    public function export($where = []):Response
     {
         $query = $this->search($where)->field('id,name,code,sort,status,create_time');
         $data = $this->getAll($query);

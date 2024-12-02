@@ -264,7 +264,9 @@ class BaseLogic
      */
     public function getImport($file): string
     {
+        echo 'getimport:';
         $full_dir = runtime_path() . '/resource/';
+        var_dump($full_dir);
         if (! is_dir($full_dir)) {
             mkdir($full_dir, 0777, true);
         }

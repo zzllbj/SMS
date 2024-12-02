@@ -108,6 +108,13 @@ const changeStatus = async (status, id) => {
 
 // SaTable 基础配置
 const options = reactive({
+  showIndex: true,
+  indexLabel: '序号',
+  indexColumnWidth: 60,
+  size: 'mini',
+  hoverable: true,
+  stripe: false,
+  showSort: true,
   api: api.getPageList,
 #whether[$pk != "id"]
   pk: '${pk}',
@@ -174,19 +181,19 @@ const options = reactive({
 const columns = reactive([
 #foreach($column in $columns)
 #if[$is_list == "true" && $is_sort == "true" && !in_array($view_type, array("saSelect", "radio", "uploadImage"))]
-  { title: '${column_comment}', dataIndex: '${column_name}', width: 180, sortable: { sortDirections: ['ascend', 'descend'] } },
+  { title: '${column_comment}', dataIndex: '${column_name}', width: 80, sortable: { sortDirections: ['ascend', 'descend'] } },
 #/if
 #if[$is_list == "true" && $is_sort != "true" && !in_array($view_type, array("saSelect", "radio", "uploadImage"))]
-  { title: '${column_comment}', dataIndex: '${column_name}', width: 180 },
+  { title: '${column_comment}', dataIndex: '${column_name}', width: 80 },
 #/if
 #if[$is_list == "true" && $is_sort == "true" && in_array($view_type, array("saSelect", "radio"))]
-  { title: '${column_comment}', dataIndex: '${column_name}', dict: '${dict}', width: 120, sortable: { sortDirections: ['ascend', 'descend'] } },
+  { title: '${column_comment}', dataIndex: '${column_name}', dict: '${dict}', width: 80, sortable: { sortDirections: ['ascend', 'descend'] } },
 #/if
 #if[$is_list == "true" && $is_sort != "true" && in_array($view_type, array("saSelect", "radio"))]
-  { title: '${column_comment}', dataIndex: '${column_name}', dict: '${dict}', width: 120 },
+  { title: '${column_comment}', dataIndex: '${column_name}', dict: '${dict}', width: 80 },
 #/if
 #if[$is_list == "true" && $view_type == "uploadImage"]
-  { title: '${column_comment}', dataIndex: '${column_name}', type: 'image', width: 120 },
+  { title: '${column_comment}', dataIndex: '${column_name}', type: 'image', width: 80 },
 #/if
 #/foreach
 ])

@@ -1,8 +1,8 @@
 <?php
 // +----------------------------------------------------------------------
-// | saithink [ saithink快速开发框架 ]
+// | 学无止境
 // +----------------------------------------------------------------------
-// | Author: sai <1430792918@qq.com>
+// | Author: zzllbj@126.com
 // +----------------------------------------------------------------------
 namespace plugin\saiadmin\process;
 
@@ -30,7 +30,7 @@ class Task
 
     public function reload()
     {
-        echo "重启Crontab\n";
+        echo "Task_Crontab\n";
         $list = Crontab::getAll();
         foreach ($list as $item) {
             Crontab::remove($item->getId());
@@ -44,8 +44,7 @@ class Task
         var_dump('参数:' . $args);
 
         $api = new Api(
-            //'http://127.0.0.1:3232',
-            config('plugin.webman.push.app.api'),
+            'http://127.0.0.1:3232',
             config('plugin.webman.push.app.app_key'),
             config('plugin.webman.push.app.app_secret')
         );
@@ -60,7 +59,7 @@ class Task
                     'content'     => '欢迎使用saiadmin框架',
                     'create_time' => date('Y-m-d H:i:s'),
                     'send_user'   => [
-                        'nickname' => '管理员',
+                        'nickname' => '系统管理员',
                         'avatar'   => '',
                     ],
                 ],

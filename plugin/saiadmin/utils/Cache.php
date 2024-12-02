@@ -43,17 +43,21 @@ class Cache
         return null;
     }
 
-    public static function set($key, $value, $expire = 0)
+    public static function set($key, $value, $ttl = 0)
     {
         $config = self::options();
         if ($config['isCache']) {
             $name = $config['cachePrefix'].$key;
             if ($config['cacheType'] =='redis') {
                 $value = json_encode($value, JSON_UNESCAPED_UNICODE);
-                Redis::set($name, $value, $expire);
+                if ($ttl > 0) {
+                    Redis::setex($name, $ttl, $value);
+                } else {
+                    Redis::set($name, $value);
+                }
             }
             if ($config['cacheType'] =='file') {
-                self::fileCache($name, $value, $expire);
+                self::fileCache($name, $value, $ttl);
             }
         }
     }
@@ -64,6 +68,7 @@ class Cache
         if ($config['isCache']) {
             $name = $config['cachePrefix'].$key;
             if ($config['cacheType'] =='redis') {
+                var_dump($name);
                 Redis::del($name);
             }
             if ($config['cacheType'] =='file') {

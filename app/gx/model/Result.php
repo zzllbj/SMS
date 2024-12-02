@@ -1,26 +1,26 @@
 <?php
 // +----------------------------------------------------------------------
-// | saiadmin [ saiadmin快速开发框架 ]
+// | admin [ 学无止境 ]
 // +----------------------------------------------------------------------
-// | Author: your name
+// | Author: zzllbj@126.com
 // +----------------------------------------------------------------------
-namespace ${namespace_start}model${namespace_end};
+namespace app\gx\model;
 
 #whether[$generate_model == 1]
 use plugin\saiadmin\basic\BaseModel;
 
 /**
- * ${menu_name}模型
+ * 成果管理模型
  */
-class ${class_name} extends BaseModel
+class Result extends BaseModel
 #/whether
 #whether[$generate_model == 2]
 use plugin\saiadmin\basic\BaseNormalModel;
 
 /**
- * ${menu_name}模型
+ * 成果管理模型
  */
-class ${class_name} extends BaseNormalModel
+class Result extends BaseNormalModel
 #/whether
 {
 
@@ -28,13 +28,13 @@ class ${class_name} extends BaseNormalModel
      * 数据表主键
      * @var string
      */
-    protected $pk = '${pk}';
+    protected $pk = 'id';
 
     /**
      * 数据库表名称
      * @var string
      */
-    protected $table = '${table_name}';
+    protected $table = 'gx_result_total';
 
 #foreach ($column in $columns)
 #if[($view_type == "uploadImage" && $multiple == "true") || ($view_type == "uploadFile" && $multiple == "true") || in_array($view_type, array("inputTag", "checkbox", "cityLinkage", "userSelect"))]

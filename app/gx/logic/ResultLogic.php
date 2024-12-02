@@ -1,27 +1,27 @@
 <?php
 // +----------------------------------------------------------------------
-// | saiadmin [ saiadmin快速开发框架 ]
+// | admin [ 学无止境 ]
 // +----------------------------------------------------------------------
-// | Author: your name
+// | Author: zzllbj@126.com
 // +----------------------------------------------------------------------
-namespace ${namespace_start}logic${namespace_end};
+namespace app\gx\logic;
 
 use plugin\saiadmin\basic\BaseLogic;
 use plugin\saiadmin\exception\ApiException;
 use plugin\saiadmin\utils\Helper;
-use ${namespace_start}model${namespace_end}\${class_name};
+use app\gx\model\Result;
 
 /**
- * ${menu_name}逻辑层
+ * 成果管理逻辑层
  */
-class ${class_name}Logic extends BaseLogic
+class ResultLogic extends BaseLogic
 {
     /**
      * 构造函数
      */
     public function __construct()
     {
-        $this->model = new ${class_name}();
+        $this->model = new Result();
     }
 
 #whether[$tpl_category == "tree"]

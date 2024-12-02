@@ -6,9 +6,9 @@
 // +----------------------------------------------------------------------
 namespace plugin\saiadmin\app\controller\system;
 
-use plugin\saiadmin\basic\BaseController;
 use plugin\saiadmin\app\logic\system\SystemPostLogic;
 use plugin\saiadmin\app\validate\system\SystemPostValidate;
+use plugin\saiadmin\basic\BaseController;
 use support\Request;
 use support\Response;
 
@@ -22,7 +22,7 @@ class SystemPostController extends BaseController
      */
     public function __construct()
     {
-        $this->logic = new SystemPostLogic();
+        $this->logic    = new SystemPostLogic();
         $this->validate = new SystemPostValidate;
         parent::__construct();
     }
@@ -32,7 +32,7 @@ class SystemPostController extends BaseController
      * @param Request $request
      * @return Response
      */
-    public function index(Request $request) : Response
+    public function index(Request $request): Response
     {
         $where = $request->more([
             ['name', ''],
@@ -41,7 +41,7 @@ class SystemPostController extends BaseController
             ['create_time', ''],
         ]);
         $query = $this->logic->search($where);
-        $data = $this->logic->getList($query);
+        $data  = $this->logic->getList($query);
         return $this->success($data);
     }
 
@@ -50,10 +50,10 @@ class SystemPostController extends BaseController
      * @param Request $request
      * @return Response
      */
-    public function accessPost(Request $request) : Response
+    public function accessPost(Request $request): Response
     {
         $where = [];
-        $data = $this->logic->accessPost($where);
+        $data  = $this->logic->accessPost($where);
         return $this->success($data);
     }
 
@@ -61,7 +61,7 @@ class SystemPostController extends BaseController
      * 下载导入模板
      * @return Response
      */
-    public function downloadTemplate() : Response
+    public function downloadTemplate(): Response
     {
         $file_name = "template.xls";
         return downloadFile($file_name);
@@ -72,10 +72,14 @@ class SystemPostController extends BaseController
      * @param Request $request
      * @return Response
      */
-    public function import(Request $request) : Response
+    public function import(Request $request): Response
     {
+        var_dump($request);
         $file = current($request->file());
-        if (!$file || !$file->isValid()) {
+        var_dump($request->file());
+        if (! $file || ! $file->isValid()) {
+            var_dump($file);
+            var_dump($request);
             return $this->fail('未找到上传文件');
         }
         $this->logic->import($file);
@@ -87,7 +91,7 @@ class SystemPostController extends BaseController
      * @param Request $request
      * @return Response
      */
-    public function export(Request $request) : Response
+    public function export(Request $request): Response
     {
         $where = $request->more([
             ['name', ''],
