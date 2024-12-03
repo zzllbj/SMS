@@ -1,8 +1,8 @@
 <?php
 // +----------------------------------------------------------------------
-// | saithink [ saithink快速开发框架 ]
+// |         学无止境
 // +----------------------------------------------------------------------
-// | Author: sai <1430792918@qq.com>
+// | Author: 907609333@qq.com
 // +----------------------------------------------------------------------
 namespace plugin\saiadmin\utils;
 
@@ -37,6 +37,7 @@ class Compile
     public function compile()
     {
         $this->c_all();
+        var_dump($this->content);
         return $this->content;
     }
 
