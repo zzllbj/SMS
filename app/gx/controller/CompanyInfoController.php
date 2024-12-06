@@ -10,11 +10,12 @@ use app\gx\logic\CompanyInfoLogic;
 use app\gx\validate\CompanyInfoValidate;
 use hg\apidoc\annotation as Apidoc;
 use plugin\saiadmin\basic\BaseController;
+use support\Cache;
 use support\Request;
 use support\Response;
 
 /**
- * @Apidoc\Title("单位")
+ * @Apidoc\Title("单位信息")
  */
 class CompanyInfoController extends BaseController
 {
@@ -46,17 +47,49 @@ class CompanyInfoController extends BaseController
      */
     public function index(Request $request): Response
     {
+        $page            = $request->input('page', 1);
+        $limit           = $request->input('limit', 10);
+        $saiType         = $request->input('saiType', 'list');
+        $orderBy         = $request->input('orderBy', '');
+        $orderType       = $request->input('orderType', '');
+        $name            = $request->input('name', '');
+        $enterprise_type = $request->input('enterprise_type', '');
+
+        $cacheKeyParams = [
+            'page'            => $page,
+            'limit'           => $limit,
+            'saiType'         => $saiType,
+            'orderBy'         => $orderBy,
+            'orderType'       => $orderType,
+            'name'            => $name,
+            'enterprise_type' => $enterprise_type,
+        ];
+
+        $rediskey = 'companyinfo:' . md5(json_encode($cacheKeyParams));
+
+        $data = Cache::get($rediskey);
+        if ($data) {
+            echo 'CompanyInfo缓存命中：' . $rediskey . "\n";
+            return $this->success($data);
+        }
+
         $where = $request->more([
             ['name', ''],
             ['enterprise_type', ''],
         ]);
+
         $query = $this->logic->search($where);
         $data  = $this->logic->getList($query);
         //增加千分符
         foreach ($data['data'] as &$record) {
-            $record['registered_capital'] = number_format($record['registered_capital'], 2);
-            $record['paid_amount']        = number_format($record['paid_amount'], 2);
+            if ($record['registered_capital'] !== null) {
+                $record['registered_capital'] = number_format($record['registered_capital'], 2);
+            }
+            if ($record['paid_amount'] !== null) {
+                $record['paid_amount'] = number_format($record['paid_amount'], 2);
+            }
         }
+        Cache::set($rediskey, $data, 3600);
         return $this->success($data);
     }
 
@@ -85,6 +118,7 @@ class CompanyInfoController extends BaseController
         }
         $result = $this->logic->save($data);
         if ($result) {
+            Cache::clear();
             return $this->success('操作成功');
         } else {
             return $this->fail('操作失败');
@@ -132,6 +166,7 @@ class CompanyInfoController extends BaseController
         }
         $result = $this->logic->update($data, [$this->pk => $id]);
         if ($result) {
+            Cache::clear();
             return $this->success('操作成功');
         } else {
             return $this->fail('操作失败');
@@ -174,6 +209,7 @@ class CompanyInfoController extends BaseController
         $status = $request->input('status', 1);
         $result = $this->logic->where($this->pk, $id)->update(['status' => $status]);
         if ($result) {
+            Cache::clear();
             return $this->success('操作成功');
         } else {
             return $this->fail('操作失败');
@@ -193,6 +229,7 @@ class CompanyInfoController extends BaseController
         $ids = $request->input('ids', '');
         if (! empty($ids)) {
             $this->logic->destroy($ids);
+            Cache::clear();
             return $this->success('操作成功');
         } else {
             return $this->fail('参数错误，请检查');
@@ -218,6 +255,7 @@ class CompanyInfoController extends BaseController
         ]);
         $query = $this->logic->recycle()->search($where);
         $data  = $this->logic->getList($query);
+        Cache::clear();
         return $this->success($data);
     }
 
@@ -234,6 +272,7 @@ class CompanyInfoController extends BaseController
         $ids = $request->input('ids', '');
         if (! empty($ids)) {
             $this->logic->restore($ids);
+            Cache::clear();
             return $this->success('恢复成功');
         } else {
             return $this->fail('参数错误，请检查');
@@ -253,6 +292,7 @@ class CompanyInfoController extends BaseController
         $ids = $request->input('ids', '');
         if (! empty($ids)) {
             $this->logic->destroy($ids, true);
+            Cache::clear();
             return $this->success('操作成功');
         } else {
             return $this->fail('参数错误，请检查');

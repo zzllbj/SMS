@@ -66,7 +66,7 @@ class CentralizeCapitalController extends BaseController
 
         $data = Cache::get($rediskey);
         if ($data) {
-            echo '缓存命中：' . $rediskey . "\n";
+            echo 'centralize缓存命中：' . $rediskey . "\n";
             return $this->success($data);
         }
 

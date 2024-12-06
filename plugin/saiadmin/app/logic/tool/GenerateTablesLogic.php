@@ -9,8 +9,8 @@
 namespace plugin\saiadmin\app\logic\tool;
 
 use plugin\saiadmin\app\model\system\SystemMenu;
-use plugin\saiadmin\app\model\tool\GenerateTables;
 use plugin\saiadmin\app\model\tool\GenerateColumns;
+use plugin\saiadmin\app\model\tool\GenerateTables;
 use plugin\saiadmin\basic\BaseLogic;
 use plugin\saiadmin\exception\ApiException;
 use plugin\saiadmin\utils\Helper;
@@ -23,16 +23,16 @@ use plugin\saiadmin\utils\Zip;
 class GenerateTablesLogic extends BaseLogic
 {
     protected $columnLogic = null;
-    protected $dataLogic = null;
+    protected $dataLogic   = null;
 
     /**
      * 构造函数
      */
     public function __construct()
     {
-        $this->model = new GenerateTables();
+        $this->model       = new GenerateTables();
         $this->columnLogic = new GenerateColumnsLogic();
-        $this->dataLogic = new DataMaintainLogic();
+        $this->dataLogic   = new DataMaintainLogic();
     }
 
     /**
@@ -62,23 +62,24 @@ class GenerateTablesLogic extends BaseLogic
         $config = config('thinkorm.connections')[$source];
         $prefix = $config['prefix'];
         foreach ($names as $item) {
-            $class_name = !empty($prefix) ? Helper::camel(Helper::str_replace_once($prefix, '', $item['name'])) : $item['name'];
-            $tableInfo = [
-                'table_name' => $item['name'],
-                'table_comment' => $item['comment'],
+            $class_name = ! empty($prefix) ? Helper::camel(Helper::str_replace_once($prefix, '', $item['name'])) : $item['name'];
+            $tableInfo  = [
+                'table_name'     => $item['name'],
+                'table_comment'  => $item['comment'],
                 'belong_menu_id' => 4000,
-                'menu_name' => $item['comment'],
-                'tpl_category' => 'single',
-                'template' => 'app',
-                'stub' => 'saiadmin',
-                'namespace' => '',
-                'package_name' => '',
-                'source' => $source,
-                'business_name' => Helper::get_business($item['name']),
-                'class_name' => $class_name,
+                'menu_name'      => $item['comment'],
+                'tpl_category'   => 'single',
+                'template'       => 'app',
+                'stub'           => 'saiadmin',
+                'namespace'      => '',
+                'is_redis'       => '1',
+                'package_name'   => '',
+                'source'         => $source,
+                'business_name'  => Helper::get_business($item['name']),
+                'class_name'     => $class_name,
                 'generate_menus' => 'save,update,read,delete,recycle,recovery,realDestroy',
             ];
-            $model = GenerateTables::create($tableInfo);
+            $model   = GenerateTables::create($tableInfo);
             $columns = $this->dataLogic->getColumnList($item['name'], $source);
             foreach ($columns as &$column) {
                 $column['table_id'] = $model->id;
@@ -97,7 +98,7 @@ class GenerateTablesLogic extends BaseLogic
     {
         $model = $this->find($id);
         // 拉取已有数据表信息
-        $queryModel = $this->columnLogic->model->where([['table_id', '=', $id]]);
+        $queryModel      = $this->columnLogic->model->where([['table_id', '=', $id]]);
         $columnLogicData = $this->columnLogic->getAll($queryModel);
         $columnLogicList = [];
         foreach ($columnLogicData as $item) {
@@ -118,9 +119,9 @@ class GenerateTablesLogic extends BaseLogic
                     foreach ($getcolumnLogicItem as $key => $item) {
                         $array = [
                             'column_comment', 'column_type', 'default_value', 'is_pk', 'is_required', 'is_insert', 'is_edit', 'is_list',
-                            'is_query', 'is_sort', 'query_type', 'view_type', 'dict_type', 'options', 'sort', 'is_cover'
+                            'is_query', 'is_sort', 'query_type', 'view_type', 'dict_type', 'options', 'sort', 'is_cover',
                         ];
-                        if (in_array($key, $array)){
+                        if (in_array($key, $array)) {
                             $column[$key] = $item;
                         }
                     }
@@ -138,11 +139,11 @@ class GenerateTablesLogic extends BaseLogic
     public function preview($id): array
     {
         $table = $this->find($id)->toArray();
-        if (!in_array($table['template'], ["plugin", "app"])) {
+        if (! in_array($table['template'], ["plugin", "app"])) {
             throw new ApiException('模板必须为plugin或者app');
         }
         $columns = $this->columnLogic->where('table_id', $id)->order('sort', 'desc')->select()->toArray();
-        $pk = 'id';
+        $pk      = 'id';
         foreach ($columns as &$column) {
             if ($column['is_pk'] == 2) {
                 $pk = $column['column_name'];
@@ -154,7 +155,7 @@ class GenerateTablesLogic extends BaseLogic
 
         $template_name = '/plugin/saiadmin/stub/saiadmin';
         if (isset($table['stub']) && $table['stub'] != '') {
-            $template_name = '/plugin/saiadmin/stub/'.$table['stub'];
+            $template_name = '/plugin/saiadmin/stub/' . $table['stub'];
         }
         $tpl = new Template($template_name);
         $tpl->assign('pk', $pk);
@@ -162,23 +163,23 @@ class GenerateTablesLogic extends BaseLogic
         $tpl->assign('tables', [$table]);
         $tpl->assign('columns', $columns);
         if ($table['tpl_category'] == 'tree') {
-            $tree_id = $table['options']['tree_id'] ?? '';
+            $tree_id        = $table['options']['tree_id'] ?? '';
             $tree_parent_id = $table['options']['tree_parent_id'] ?? '';
-            $tree_name = $table['options']['tree_name'] ?? '';
+            $tree_name      = $table['options']['tree_name'] ?? '';
             $tpl->assign('tree_id', $tree_id);
             $tpl->assign('tree_parent_id', $tree_parent_id);
             $tpl->assign('tree_name', $tree_name);
         }
         if ($table['template'] == 'plugin') {
-            $namespace_start = "plugin\\".$table['namespace']."\\app\\";
-            $namespace_end =  $table['package_name'] != "" ? "\\".$table['package_name'] : "";
-            $url_path = 'app/'.$table['namespace'] . ($table['package_name'] != "" ? "/".$table['package_name'] : "") .'/'.$table['class_name'];
-            $route = 'app/';
+            $namespace_start = "plugin\\" . $table['namespace'] . "\\app\\";
+            $namespace_end   = $table['package_name'] != "" ? "\\" . $table['package_name'] : "";
+            $url_path        = 'app/' . $table['namespace'] . ($table['package_name'] != "" ? "/" . $table['package_name'] : "") . '/' . $table['class_name'];
+            $route           = 'app/';
         } else {
-            $namespace_start = "app\\".$table['namespace']."\\";
-            $namespace_end =  $table['package_name'] != "" ? "\\".$table['package_name'] : "";
-            $url_path = $table['namespace'] . ($table['package_name'] != "" ? "/".$table['package_name'] : "") .'/'.$table['class_name'];
-            $route = '';
+            $namespace_start = "app\\" . $table['namespace'] . "\\";
+            $namespace_end   = $table['package_name'] != "" ? "\\" . $table['package_name'] : "";
+            $url_path        = $table['namespace'] . ($table['package_name'] != "" ? "/" . $table['package_name'] : "") . '/' . $table['class_name'];
+            $route           = '';
         }
         $tpl->assign('namespace_start', $namespace_start);
         $tpl->assign('namespace_end', $namespace_end);
@@ -186,7 +187,7 @@ class GenerateTablesLogic extends BaseLogic
         $tpl->assign('route', $route);
 
         $relations = [];
-        if(isset($table['options']['relations'])) {
+        if (isset($table['options']['relations'])) {
             if (count($table['options']['relations']) > 0) {
                 $relations = $table['options']['relations'];
             }
@@ -194,36 +195,36 @@ class GenerateTablesLogic extends BaseLogic
         $tpl->assign('relations', $relations);
 
         $fileArr = Helper::get_dir($template_name);
-        $data = [];
+        $data    = [];
         foreach ($fileArr as $dir) {
-            $files = Helper::get_dir($template_name.DIRECTORY_SEPARATOR.$dir);
+            $files = Helper::get_dir($template_name . DIRECTORY_SEPARATOR . $dir);
             foreach ($files as $file) {
-                $name = pathinfo($file, PATHINFO_FILENAME);
-                $tab_name = pathinfo($file, PATHINFO_FILENAME).".".$dir;
-                $lang = $dir;
+                $name     = pathinfo($file, PATHINFO_FILENAME);
+                $tab_name = pathinfo($file, PATHINFO_FILENAME) . "." . $dir;
+                $lang     = $dir;
                 if ($dir === 'vue') {
                     $lang = 'html';
                     if (in_array($name, ['single', 'tree'])) {
                         if ($table['tpl_category'] == $name) {
-                            $name = 'index.vue';
+                            $name     = 'index.vue';
                             $tab_name = 'index.vue';
                         } else {
                             continue;
                         }
                     }
                 }
-                $template = $tpl->show(DIRECTORY_SEPARATOR.$dir.DIRECTORY_SEPARATOR.$file);
-                if($dir == 'js' || $dir == 'ts') {
+                $template = $tpl->show(DIRECTORY_SEPARATOR . $dir . DIRECTORY_SEPARATOR . $file);
+                if ($dir == 'js' || $dir == 'ts') {
                     $lang = 'javascript';
                 }
-                if($dir == 'sql') {
+                if ($dir == 'sql') {
                     $lang = 'mysql';
                 }
                 $data[] = [
                     'tab_name' => $tab_name,
-                    'name' => $name,
-                    'lang' => $lang,
-                    'code' => $template
+                    'name'     => $name,
+                    'lang'     => $lang,
+                    'code'     => $template,
                 ];
             }
         }
@@ -235,7 +236,7 @@ class GenerateTablesLogic extends BaseLogic
      */
     public function generate($idsArr)
     {
-        $zip = new Zip();
+        $zip    = new Zip();
         $tables = $this->model->where('id', 'in', $idsArr)->select()->toArray();
         foreach ($idsArr as $table_id) {
             $this->genUnit($table_id, $tables);
@@ -255,7 +256,7 @@ class GenerateTablesLogic extends BaseLogic
             throw new ApiException('请选择要生成的表');
         }
         $debug = config('app.debug', true);
-        if (!$debug) {
+        if (! $debug) {
             throw new ApiException('非调试模式下，不允许生成文件');
         }
         if ($table['generate_type'] == 2) {
@@ -270,20 +271,20 @@ class GenerateTablesLogic extends BaseLogic
 
     public function genFile($fileName, $template)
     {
-        $zip_path = runtime_path().DIRECTORY_SEPARATOR.'saiadmin';
-        if (!is_dir($zip_path)) {
+        $zip_path = runtime_path() . DIRECTORY_SEPARATOR . 'saiadmin';
+        if (! is_dir($zip_path)) {
             throw new ApiException('代码文件查找失败');
         }
         $parent_path = dirname(base_path());
-        $front_path = $parent_path.DIRECTORY_SEPARATOR.$fileName;
-        if (!is_dir($front_path)) {
+        $front_path  = $parent_path . DIRECTORY_SEPARATOR . $fileName;
+        if (! is_dir($front_path)) {
             throw new ApiException('前端项目目录查找失败');
         }
-        $vue_path = $front_path.DIRECTORY_SEPARATOR.'src';
-        $php_path = base_path().DIRECTORY_SEPARATOR.$template;
+        $vue_path = $front_path . DIRECTORY_SEPARATOR . 'src';
+        $php_path = base_path() . DIRECTORY_SEPARATOR . $template;
 
-        copy_dir($zip_path.DIRECTORY_SEPARATOR.'src', $vue_path, true);
-        copy_dir($zip_path.DIRECTORY_SEPARATOR.'php'.DIRECTORY_SEPARATOR.$template, $php_path, true);
+        copy_dir($zip_path . DIRECTORY_SEPARATOR . 'src', $vue_path, true);
+        copy_dir($zip_path . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . $template, $php_path, true);
 
         // 清理源目录
         if (is_dir($zip_path)) {
@@ -300,35 +301,35 @@ class GenerateTablesLogic extends BaseLogic
         /*不存在的情况下进行新建操作*/
 
         if ($tables['template'] == 'plugin') {
-            $url_path = 'app/'.$tables['namespace'] . ($tables['package_name'] != "" ? "/".$tables['package_name'] : "") .'/'.$tables['class_name'];
-            $code = 'app/'.$tables['namespace'] . ($tables['package_name'] != "" ? "/".$tables['package_name'] : "") .'/'.$tables['business_name'];
+            $url_path = 'app/' . $tables['namespace'] . ($tables['package_name'] != "" ? "/" . $tables['package_name'] : "") . '/' . $tables['class_name'];
+            $code     = 'app/' . $tables['namespace'] . ($tables['package_name'] != "" ? "/" . $tables['package_name'] : "") . '/' . $tables['business_name'];
         } else {
-            $url_path = $tables['namespace'] . ($tables['package_name'] != "" ? "/".$tables['package_name'] : "") .'/'.$tables['class_name'];
-            $code = $tables['namespace'] . ($tables['package_name'] != "" ? "/".$tables['package_name'] : "") .'/'.$tables['business_name'];
+            $url_path = $tables['namespace'] . ($tables['package_name'] != "" ? "/" . $tables['package_name'] : "") . '/' . $tables['class_name'];
+            $code     = $tables['namespace'] . ($tables['package_name'] != "" ? "/" . $tables['package_name'] : "") . '/' . $tables['business_name'];
         }
-        $component = $tables['namespace'] . ($tables['package_name'] != "" ? "/".$tables['package_name'] : "") .'/'.$tables['business_name'];
+        $component = $tables['namespace'] . ($tables['package_name'] != "" ? "/" . $tables['package_name'] : "") . '/' . $tables['business_name'];
 
         /*先获取一下已有的路由中是否包含当前ID的路由的核心信息*/
-        $model = new SystemMenu();
+        $model     = new SystemMenu();
         $tableMenu = $model->where('generate_id', $tables['id'])->find();
-        $fistMenu = [
-            'parent_id' => $tables['belong_menu_id'],
-            'level' => '0,' . $tables['belong_menu_id'],
-            'name' => $tables['menu_name'],
-            'code' => $code,
-            'icon' => 'icon-home',
-            'route' => $code,
-            'component' => "$component/index",
-            'redirect' => null,
-            'is_hidden' => 2,
-            'type' => 'M',
-            'status' => 1,
-            'sort' => 0,
-            'remark' => null,
-            'generate_id' => $tables['id']
+        $fistMenu  = [
+            'parent_id'   => $tables['belong_menu_id'],
+            'level'       => '0,' . $tables['belong_menu_id'],
+            'name'        => $tables['menu_name'],
+            'code'        => $code,
+            'icon'        => 'icon-home',
+            'route'       => $code,
+            'component'   => "$component/index",
+            'redirect'    => null,
+            'is_hidden'   => 2,
+            'type'        => 'M',
+            'status'      => 1,
+            'sort'        => 0,
+            'remark'      => null,
+            'generate_id' => $tables['id'],
         ];
         if (empty($tableMenu)) {
-            $temp = SystemMenu::create($fistMenu);
+            $temp       = SystemMenu::create($fistMenu);
             $fistMenuId = $temp->id;
         } else {
             $fistMenu['id'] = $tableMenu['id'];
@@ -345,28 +346,28 @@ class GenerateTablesLogic extends BaseLogic
             ['name' => '删除', 'key' => 'destroy'],
             ['name' => '回收', 'key' => 'recycle'],
             ['name' => '恢复', 'key' => 'recovery'],
-            ['name' => '销毁', 'key' => 'realDestroy']
+            ['name' => '销毁', 'key' => 'realDestroy'],
         ];
 
         foreach ($childNodes as $node) {
-            $nodeData = $model->where('parent_id', $fistMenuId)->where('generate_key', $node['key'])->find();
+            $nodeData      = $model->where('parent_id', $fistMenuId)->where('generate_key', $node['key'])->find();
             $childNodeData = [
-                'parent_id' => $fistMenuId,
-                'level' => "{$tables['belong_menu_id']},{$fistMenuId}",
-                'name' => $tables['menu_name'] . $node['name'],
-                'code' => "/$url_path/{$node['key']}",
-                'icon' => null,
-                'route' => null,
-                'component' => null,
-                'redirect' => null,
-                'is_hidden' => 1,
-                'type' => 'B',
-                'status' => 1,
-                'sort' => 0,
-                'remark' => null,
-                'generate_key' => $node['key']
+                'parent_id'    => $fistMenuId,
+                'level'        => "{$tables['belong_menu_id']},{$fistMenuId}",
+                'name'         => $tables['menu_name'] . $node['name'],
+                'code'         => "/$url_path/{$node['key']}",
+                'icon'         => null,
+                'route'        => null,
+                'component'    => null,
+                'redirect'     => null,
+                'is_hidden'    => 1,
+                'type'         => 'B',
+                'status'       => 1,
+                'sort'         => 0,
+                'remark'       => null,
+                'generate_key' => $node['key'],
             ];
-            if (!empty($nodeData)) {
+            if (! empty($nodeData)) {
                 $childNodeData['id'] = $nodeData['id'];
                 $nodeData->save($childNodeData);
             } else {
@@ -408,11 +409,11 @@ class GenerateTablesLogic extends BaseLogic
     public function genUnit($table_id, $tables)
     {
         $table = $this->find($table_id)->toArray();
-        if (!in_array($table['template'], ["plugin", "app"])) {
+        if (! in_array($table['template'], ["plugin", "app"])) {
             throw new ApiException('模板必须为plugin或者app');
         }
         $columns = $this->columnLogic->where('table_id', $table_id)->order('sort', 'desc')->select()->toArray();
-        $pk = 'id';
+        $pk      = 'id';
         foreach ($columns as &$column) {
             if ($column['is_pk'] == 2) {
                 $pk = $column['column_name'];
@@ -424,7 +425,7 @@ class GenerateTablesLogic extends BaseLogic
 
         $template_name = '/plugin/saiadmin/stub/saiadmin';
         if (isset($table['stub']) && $table['stub'] != '') {
-            $template_name = '/plugin/saiadmin/stub/'.$table['stub'];
+            $template_name = '/plugin/saiadmin/stub/' . $table['stub'];
         }
         $tpl = new Template($template_name);
         $tpl->assign('pk', $pk);
@@ -432,23 +433,23 @@ class GenerateTablesLogic extends BaseLogic
         $tpl->assign('tables', $tables);
         $tpl->assign('columns', $columns);
         if ($table['tpl_category'] == 'tree') {
-            $tree_id = $table['options']['tree_id'] ?? '';
+            $tree_id        = $table['options']['tree_id'] ?? '';
             $tree_parent_id = $table['options']['tree_parent_id'] ?? '';
-            $tree_name = $table['options']['tree_name'] ?? '';
+            $tree_name      = $table['options']['tree_name'] ?? '';
             $tpl->assign('tree_id', $tree_id);
             $tpl->assign('tree_parent_id', $tree_parent_id);
             $tpl->assign('tree_name', $tree_name);
         }
         if ($table['template'] == 'plugin') {
-            $namespace_start = "plugin\\".$table['namespace']."\\app\\";
-            $namespace_end =  $table['package_name'] != "" ? "\\".$table['package_name'] : "";
-            $url_path = 'app/'.$table['namespace'] . ($table['package_name'] != "" ? "/".$table['package_name'] : "") .'/'.$table['class_name'];
-            $route = 'app/';
+            $namespace_start = "plugin\\" . $table['namespace'] . "\\app\\";
+            $namespace_end   = $table['package_name'] != "" ? "\\" . $table['package_name'] : "";
+            $url_path        = 'app/' . $table['namespace'] . ($table['package_name'] != "" ? "/" . $table['package_name'] : "") . '/' . $table['class_name'];
+            $route           = 'app/';
         } else {
-            $namespace_start = "app\\".$table['namespace']."\\";
-            $namespace_end =  $table['package_name'] != "" ? "\\".$table['package_name'] : "";
-            $url_path = $table['namespace'] . ($table['package_name'] != "" ? "/".$table['package_name'] : "") .'/'.$table['class_name'];
-            $route = '';
+            $namespace_start = "app\\" . $table['namespace'] . "\\";
+            $namespace_end   = $table['package_name'] != "" ? "\\" . $table['package_name'] : "";
+            $url_path        = $table['namespace'] . ($table['package_name'] != "" ? "/" . $table['package_name'] : "") . '/' . $table['class_name'];
+            $route           = '';
         }
         $tpl->assign('namespace_start', $namespace_start);
         $tpl->assign('namespace_end', $namespace_end);
@@ -456,7 +457,7 @@ class GenerateTablesLogic extends BaseLogic
         $tpl->assign('route', $route);
 
         $relations = [];
-        if(isset($table['options']['relations'])) {
+        if (isset($table['options']['relations'])) {
             if (count($table['options']['relations']) > 0) {
                 $relations = $table['options']['relations'];
             }
@@ -464,13 +465,13 @@ class GenerateTablesLogic extends BaseLogic
         $tpl->assign('relations', $relations);
 
         $template = $table['template'];
-        $class = new \ReflectionClass('plugin\saiadmin\utils\GenStruct');
-        $instance  = $class->newInstanceArgs();
-        if (!$class->hasMethod($template)) {
+        $class    = new \ReflectionClass('plugin\saiadmin\utils\GenStruct');
+        $instance = $class->newInstanceArgs();
+        if (! $class->hasMethod($template)) {
             throw new ApiException('请到GenStruct中为当前模板配置文件结构解析方法!');
         }
 
-        $method = $class->getMethod($template);
+        $method  = $class->getMethod($template);
         $fileArr = $method->invokeArgs($instance, [$table]);
         foreach ($fileArr as $item) {
             $tpl->gen($item['input'], $item['output']);
@@ -495,12 +496,12 @@ class GenerateTablesLogic extends BaseLogic
      */
     public function updateTableAndColumns($data)
     {
-        $id = $data['id'];
+        $id      = $data['id'];
         $columns = $data['columns'];
 
         unset($data['columns']);
 
-        if (!empty($data['belong_menu_id'])) {
+        if (! empty($data['belong_menu_id'])) {
             $data['belong_menu_id'] = is_array($data['belong_menu_id']) ? array_pop($data['belong_menu_id']) : $data['belong_menu_id'];
         } else {
             $data['belong_menu_id'] = 0;

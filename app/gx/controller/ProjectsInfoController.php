@@ -66,7 +66,7 @@ class ProjectsInfoController extends BaseController
 
         $data = Cache::get($rediskey);
         if ($data) {
-            echo '缓存命中：' . $rediskey . "\n";
+            echo 'projectsinfo缓存命中：' . $rediskey . "\n";
             return $this->success($data);
         }
 
@@ -290,7 +290,7 @@ class ProjectsInfoController extends BaseController
      * 下载导入模板
      * @return Response
      */
-    public function downloadTemplate() : Response
+    public function downloadTemplate(): Response
     {
         $file_name = "课题信息.xls";
         return downloadFile($file_name);
@@ -303,11 +303,11 @@ class ProjectsInfoController extends BaseController
      * @param Request $request
      * @return Response
      */
-    public function import(Request $request) : Response
+    public function import(Request $request): Response
     {
 
         $file = current($request->file());
-        if (!$file || !$file->isValid()) {
+        if (! $file || ! $file->isValid()) {
             return $this->fail('未找到上传文件');
         }
         $this->logic->import($file);
@@ -321,7 +321,7 @@ class ProjectsInfoController extends BaseController
      * @param Request $request
      * @return Response
      */
-    public function export(Request $request) : Response
+    public function export(Request $request): Response
     {
         $where = $request->more([
             ['name', ''],

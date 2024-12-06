@@ -9,6 +9,7 @@ namespace ${namespace_start}controller${namespace_end};
 use plugin\saiadmin\basic\BaseController;
 use ${namespace_start}logic${namespace_end}\${class_name}Logic;
 use ${namespace_start}validate${namespace_end}\${class_name}Validate;
+use support\Cache;
 use support\Request;
 use support\Response;
 
